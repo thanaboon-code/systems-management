@@ -1,0 +1,261 @@
+{
+  "info": {
+    "name": "Management-System (Order)",
+    "description": "บันทึก Order กุ้งรายวัน + 2 ปุ่มเช็กเงิน + Dashboard — กดเรียงจากบนลงล่าง",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "orderId",
+      "value": "1"
+    },
+    {
+      "key": "date",
+      "value": "2026-10-10"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health check",
+      "request": {
+        "method": "GET",
+        "url": "{{base}}/health"
+      }
+    },
+    {
+      "name": "A. Order",
+      "item": [
+        {
+          "name": "A1. เพิ่ม order บ่อจรัญ (ไซซ์ส่งคนละที่)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/new-order",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set('orderId', pm.response.json().id);",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A2. เพิ่ม order บ่อสมชาย (บวกส่วนต่าง 1.5%)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/new-order",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"สมชาย\",\n  \"includeMargin\": true,\n  \"items\": [\n    {\n      \"size\": \"66 - 70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"1000\",\n      \"pricePerKg\": \"160\"\n    },\n    {\n      \"size\": \"100-120\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"300\",\n      \"pricePerKg\": \"110\"\n    },\n    {\n      \"size\": \"กุ้งนิ่ม\",\n      \"weight\": \"50\",\n      \"pricePerKg\": \"60\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "A3. ดูรายการ (หน้า 1)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/new-order"
+          }
+        },
+        {
+          "name": "A4. ดูเฉพาะวัน",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/new-order?date={{date}}"
+          }
+        },
+        {
+          "name": "A6. แบ่งหน้า (หน้าละ 1 รายการ หน้า 2)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/new-order?page=2&pageSize=1"
+          }
+        },
+        {
+          "name": "A7. ตัวเลือกที่เคยกรอก (ไซซ์/ปลายทาง/ชื่อบ่อ)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/new-order/options"
+          }
+        },
+        {
+          "name": "A8. ดูรายการเดียว",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/new-order/{{orderId}}"
+          }
+        },
+        {
+          "name": "A9. แก้ไข (ส่งข้อมูลทั้งชุด)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base}}/api/new-order/{{orderId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"158\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B. ปุ่มเช็กเงิน",
+      "item": [
+        {
+          "name": "B1. ✅ จ่ายเจ้าของบ่อแล้ว",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base}}/api/new-order/{{orderId}}/paid-to-farmer",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checked\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "B2. ✅ ได้รับเงินแล้ว",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base}}/api/new-order/{{orderId}}/received",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checked\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "B5. ทดสอบล็อก: แก้หลังปิดเงิน → ต้องได้ 409",
+          "request": {
+            "method": "PUT",
+            "url": "{{base}}/api/new-order/{{orderId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "B6. ↩️ ยกเลิกติ๊ก ได้รับเงิน",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base}}/api/new-order/{{orderId}}/received",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checked\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "B7. ↩️ ยกเลิกติ๊ก จ่ายเจ้าของบ่อ",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base}}/api/new-order/{{orderId}}/paid-to-farmer",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checked\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "C. Dashboard",
+      "item": [
+        {
+          "name": "C1. สรุปของวันที่เลือก",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/dashboard?date={{date}}"
+          }
+        },
+        {
+          "name": "C2. สรุปวันนี้",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/dashboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "D. ยกเลิก / กู้คืน",
+      "item": [
+        {
+          "name": "D1. ยกเลิกรายการ (ไม่ลบจริง)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base}}/api/new-order/{{orderId}}"
+          }
+        },
+        {
+          "name": "D3. กู้คืนรายการ",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base}}/api/new-order/{{orderId}}/restore"
+          }
+        }
+      ]
+    }
+  ]
+}

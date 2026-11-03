@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ระบบบันทึก Order กุ้ง (นับเป็นรายวัน)
+//
+//   Order (1 บ่อ / 1 วัน)
+//     └── OrderItem (ไซซ์ละ 1 แถว แต่ละไซซ์ส่งคนละที่ได้)
+//
+// ตัวอย่าง: วัน 10/10/69 บ่อจรัญ
+//   66-70   5,289.59 กก. × 155 → โรงงาน ก
+//   96-100    490.70 กก. × 120 → กทม.
+//   totalWeight  = รวมน้ำหนักทุกไซซ์
+//   totalAmount  = รวมยอดทุกไซซ์ (ราคาบ่อนี้ = ยอดที่จ่ายเจ้าของบ่อ)
+//   marginAmount = totalAmount × 1.5%  (เฉพาะ order ที่เปิด includeMargin, ไม่เปิด = 0)
+//   grandTotal   = totalAmount + marginAmount (ยอดที่เราเก็บ)
+
+// ======================================================
+// Order = รายการซื้อขาย 1 บ่อ ใน 1 วัน
+// ======================================================
+model Order {
+  id Int @id @default(autoincrement())
+
+  // ---- ข้อมูลทั่วไป (ผู้ใช้กรอก) ----
+  orderDate DateTime @db.Date // วันที่ของ order (ใช้นับรายวัน)
+  pondName  String            // ชื่อบ่อ / เจ้าของบ่อ เช่น "จรัญ"
+  note      String?
+
+  // ---- ยอดเงิน (ระบบคำนวณให้ ห้ามกรอกเอง) ----
+  totalWeight   Decimal @db.Decimal(12, 2) // รวมน้ำหนักทุกไซซ์ (กก.)
+  totalAmount   Decimal @db.Decimal(14, 2) // รวมราคาทุกไซซ์ = ยอดจ่ายเจ้าของบ่อ
+  includeMargin Boolean @default(false)    // order นี้บวกส่วนต่างหรือไม่
+  marginRate    Decimal @default(1.5) @db.Decimal(5, 2) // % ส่วนต่าง
+  marginAmount  Decimal @db.Decimal(14, 2) // ส่วนต่างที่เราเก็บ (ไม่บวก = 0)
+  grandTotal    Decimal @db.Decimal(14, 2) // totalAmount + marginAmount = ยอดที่เราเก็บ
+
+  // ---- 2 ปุ่มเช็กสถานะเงิน ----
+  isPaidToFarmer Boolean   @default(false) // จ่ายเงินเจ้าของบ่อแล้วหรือยัง
+  paidToFarmerAt DateTime?
+  isReceived     Boolean   @default(false) // ได้รับเงินจากรายการนี้แล้วหรือยัง
+  receivedAt     DateTime?
+
+  // ---- ยกเลิก (แทนการลบจริง) ----
+  isCancelled Boolean   @default(false)
+  cancelledAt DateTime?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderDate])
+  @@index([isCancelled])
+  @@map("orders")
+}
+
+// ======================================================
+// OrderItem = ไซซ์ 1 แถวใน Order
+// ======================================================
+model OrderItem {
+  id Int @id @default(autoincrement())
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  size        String                     // เช่น "66-70" (ระบบจัดรูปแบบให้ "66 - 70" → "66-70")
+  destination String?                    // ไซซ์นี้ส่งไปไหน เช่น "โรงงาน ก", "กทม."
+  weight      Decimal @db.Decimal(12, 2) // น้ำหนัก (กก.)
+  pricePerKg  Decimal @db.Decimal(10, 2) // ราคาต่อ กก.
+  amount      Decimal @db.Decimal(14, 2) // [ระบบคำนวณ] weight × pricePerKg
+
+  @@index([size])
+  @@index([orderId])
+  @@map("order_items")
+}

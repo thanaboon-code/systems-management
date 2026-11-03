@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* ธีมของระบบ — ประกาศที่นี่แล้วใช้เป็น class ได้เลย
+   เช่น --color-primary → bg-primary, text-primary, border-primary
+   (ค่าชั่วคราว จะปรับให้ตรงกับแบบ Figma) */
+@theme {
+  --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+
+  --color-primary: #0f766e;      /* สีหลัก (teal) */
+  --color-primary-soft: #ccfbf1;
+  --color-done: #16a34a;         /* เสร็จแล้ว: จ่าย/รับเงินแล้ว */
+  --color-pending: #d97706;      /* ค้างอยู่ */
+  --color-danger: #dc2626;       /* ยกเลิก / error */
+  --color-page: #f5f7f8;         /* พื้นหลังหน้า */
+  --color-line: #e3e8eb;         /* เส้นขอบ */
+  --color-ink: #1f2933;          /* ตัวอักษรหลัก */
+  --color-muted: #6b7280;        /* ตัวอักษรรอง */
+}
+
+@layer base {
+  body {
+    @apply bg-page font-sans text-ink antialiased;
+  }
+}
