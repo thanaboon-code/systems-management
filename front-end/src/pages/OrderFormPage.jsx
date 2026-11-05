@@ -17,7 +17,8 @@ const newRow = (item = {}) => ({
   size: item.size ?? '',
   destination: item.destination ?? '',
   weight: item.weight != null ? String(Number(item.weight)) : '',
-  pricePerKg: item.pricePerKg != null ? String(Number(item.pricePerKg)) : '',
+  buyPricePerKg: item.buyPricePerKg != null ? String(Number(item.buyPricePerKg)) : '', // ราคาซื้อจากบ่อ
+  pricePerKg: item.pricePerKg != null ? String(Number(item.pricePerKg)) : '',          // ราคาขายให้โรงงาน
 })
 
 const emptyForm = () => ({
@@ -99,10 +100,11 @@ function OrderForm({ order, options }) {
       note: form.note,
       includeMargin: form.includeMargin,
       ...(form.includeMargin && { marginRate: form.marginRate }),
-      items: form.items.map(({ size, destination, weight, pricePerKg }) => ({
+      items: form.items.map(({ size, destination, weight, buyPricePerKg, pricePerKg }) => ({
         size,
         destination,
         weight,
+        buyPricePerKg,
         pricePerKg,
       })),
     }
@@ -155,40 +157,50 @@ function OrderForm({ order, options }) {
           <Card className="space-y-3">
             <h2 className="font-semibold">รายการไซซ์</h2>
 
-            {form.items.map((item, index) => (
-              <div key={item.key} className="grid grid-cols-2 gap-2 border-b border-line pb-3 last:border-0 sm:grid-cols-[1fr_1.3fr_1fr_1fr_1fr_auto] sm:items-end">
-                <label className="space-y-1">
-                  <span className="text-xs text-muted">ไซซ์ *</span>
-                  <input required list="size-options" className={input} value={item.size}
-                    placeholder="66-70" onChange={(e) => setItem(item.key, 'size', e.target.value)} />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted">ส่งไปที่</span>
-                  <input list="destination-options" className={input} value={item.destination}
-                    placeholder="โรงงาน ก" onChange={(e) => setItem(item.key, 'destination', e.target.value)} />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted">น้ำหนัก (กก.) *</span>
-                  <input required inputMode="decimal" className={number} value={item.weight}
-                    onChange={(e) => setItem(item.key, 'weight', e.target.value)} />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted">ราคา/กก. *</span>
-                  <input required inputMode="decimal" className={number} value={item.pricePerKg}
-                    onChange={(e) => setItem(item.key, 'pricePerKg', e.target.value)} />
-                </label>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted">ยอดเงิน</span>
-                  <div className="py-2 text-right font-medium">
-                    {formatMoney(rowAmount(item.weight, item.pricePerKg))}
+            {form.items.map((item, index) => {
+              const buy = rowAmount(item.weight, item.buyPricePerKg)
+              const sell = rowAmount(item.weight, item.pricePerKg)
+              return (
+                <div key={item.key} className="space-y-2 border-b border-line pb-3 last:border-0">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1.2fr_1fr_1fr_1fr_auto] sm:items-end">
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted">ไซซ์ *</span>
+                      <input required list="size-options" className={input} value={item.size}
+                        placeholder="66-70" onChange={(e) => setItem(item.key, 'size', e.target.value)} />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted">ส่งไปที่</span>
+                      <input list="destination-options" className={input} value={item.destination}
+                        placeholder="โรงงาน ก" onChange={(e) => setItem(item.key, 'destination', e.target.value)} />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted">น้ำหนัก (กก.) *</span>
+                      <input required inputMode="decimal" className={number} value={item.weight}
+                        onChange={(e) => setItem(item.key, 'weight', e.target.value)} />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted">ราคาซื้อ/กก. (บ่อ) *</span>
+                      <input required inputMode="decimal" className={number} value={item.buyPricePerKg}
+                        onChange={(e) => setItem(item.key, 'buyPricePerKg', e.target.value)} />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted">ราคาขาย/กก. (โรงงาน) *</span>
+                      <input required inputMode="decimal" className={number} value={item.pricePerKg}
+                        onChange={(e) => setItem(item.key, 'pricePerKg', e.target.value)} />
+                    </label>
+                    <Button variant="danger" className="self-end" aria-label={`ลบแถวที่ ${index + 1}`}
+                      disabled={form.items.length === 1} onClick={() => removeItem(item.key)}>
+                      ✕
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-x-4 text-sm text-muted">
+                    <span>ยอดซื้อ <b className="text-ink">{formatMoney(buy)}</b></span>
+                    <span>ยอดขาย <b className="text-ink">{formatMoney(sell)}</b></span>
+                    <span>ส่วนต่างราคา <b className={sell - buy < 0 ? 'text-danger' : 'text-done'}>{formatMoney(sell - buy)}</b></span>
                   </div>
                 </div>
-                <Button variant="danger" className="self-end" aria-label={`ลบแถวที่ ${index + 1}`}
-                  disabled={form.items.length === 1} onClick={() => removeItem(item.key)}>
-                  ✕
-                </Button>
-              </div>
-            ))}
+              )
+            })}
 
             <Button variant="ghost" onClick={addItem}>+ เพิ่มไซซ์</Button>
           </Card>
@@ -198,7 +210,8 @@ function OrderForm({ order, options }) {
         <Card className="h-fit space-y-3 lg:sticky lg:top-6">
           <h2 className="font-semibold">สรุป</h2>
           <Row label="น้ำหนักรวม" value={formatWeight(totals.totalWeight)} />
-          <Row label="ยอดรวมตามไซซ์ (ที่ต้องเก็บ)" value={formatMoney(totals.totalAmount)} />
+          <Row label="ยอดขาย (เก็บจากโรงงาน)" value={formatMoney(totals.totalAmount)} />
+          <Row label="ยอดซื้อจากบ่อ" value={formatMoney(totals.buyTotal)} />
 
           <label className="flex items-center gap-2">
             <input type="checkbox" className="size-4 accent-primary" checked={form.includeMargin}
@@ -212,10 +225,11 @@ function OrderForm({ order, options }) {
               </>
             )}
           </label>
-          <Row label="หักส่วนต่าง (ของเรา)" value={`− ${formatMoney(totals.marginAmount)}`} />
+          <Row label="หักส่วนต่างจากเจ้าของบ่อ" value={`− ${formatMoney(totals.marginAmount)}`} />
 
-          <div className="border-t border-line pt-3">
-            <Row label="ยอดจ่ายเจ้าของบ่อ" value={formatMoney(totals.grandTotal)} big />
+          <div className="space-y-2 border-t border-line pt-3">
+            <Row label="ยอดจ่ายเจ้าของบ่อ" value={formatMoney(totals.grandTotal)} />
+            <Row label="กำไร" value={formatMoney(totals.profit)} big negative={totals.profit < 0} />
           </div>
           <p className="text-xs text-muted">* ยอดจริงคำนวณโดยระบบตอนบันทึก</p>
 
@@ -234,11 +248,11 @@ function OrderForm({ order, options }) {
   )
 }
 
-function Row({ label, value, big }) {
+function Row({ label, value, big, negative }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-muted">{label}</span>
-      <span className={big ? 'text-xl font-bold text-primary' : 'font-medium'}>{value}</span>
+      <span className={`${big ? 'text-xl font-bold' : 'font-medium'} ${negative ? 'text-danger' : big ? 'text-primary' : ''}`}>{value}</span>
     </div>
   )
 }

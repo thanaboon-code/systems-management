@@ -1,5 +1,6 @@
 // หน้าแดชบอร์ด: ยอดค้างทั้งหมด + สรุปของวันที่เลือก
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link } from 'react-router'
 import { getDashboard } from '../api/dashboard.js'
 import { formatMoney, formatDate, todayISO } from '../utils/format.js'
@@ -14,6 +15,8 @@ export default function DashboardPage() {
   const [date, setDate] = useState(todayISO)
   const [result, setResult] = useState({ data: null, error: null })
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getDashboard(date)
@@ -22,7 +25,7 @@ export default function DashboardPage() {
     return () => {
       ignore = true
     }
-  }, [date])
+  }, [date, refreshKey])
 
   const { data, error } = result
 

@@ -1,6 +1,7 @@
 // ส่วนท้ายหน้ารายการ: order ที่ยกเลิกของวันนั้น + ปุ่มกู้คืน
 // พับไว้ก่อน กดเปิดดูได้ · onRestored() = แจ้งหน้าแม่ให้โหลดรายการใหม่
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link } from 'react-router'
 import { getCancelledOrders, restoreOrder } from '../api/orders.js'
 import { formatDateTime, formatMoney } from '../utils/format.js'
@@ -13,6 +14,8 @@ export default function CancelledOrders({ date, onRestored }) {
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState('')
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getCancelledOrders(date)
@@ -21,7 +24,7 @@ export default function CancelledOrders({ date, onRestored }) {
     return () => {
       ignore = true
     }
-  }, [date, reloadKey])
+  }, [date, reloadKey, refreshKey])
 
   async function handleRestore(id) {
     setBusyId(id)

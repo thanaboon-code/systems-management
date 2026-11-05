@@ -2,6 +2,7 @@
 // นับจากไซซ์ที่ยังไม่ได้ติ๊ก "ได้รับเงินแล้ว" ของปลายทางนั้น
 // กด "ได้รับแล้ว" ที่แต่ละ order ได้เลย
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link } from 'react-router'
 import { getReceivables } from '../api/dashboard.js'
 import { setReceived } from '../api/orders.js'
@@ -16,6 +17,8 @@ export default function ReceivablesPage() {
   const [busyKey, setBusyKey] = useState(null)   // แถวที่กำลังบันทึก
   const [actionError, setActionError] = useState('')
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getReceivables()
@@ -24,7 +27,7 @@ export default function ReceivablesPage() {
     return () => {
       ignore = true
     }
-  }, [reloadKey])
+  }, [reloadKey, refreshKey])
 
   const { data, error } = result
 

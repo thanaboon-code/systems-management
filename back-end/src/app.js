@@ -14,7 +14,11 @@ const app = express();
 app.use(helmet());        // security header
 app.use(cors());          // ให้ front-end ต่างพอร์ตเรียกได้
 app.use(morgan('dev'));   // log ทุก request ใน terminal
-app.use(express.json());  // แปลง body JSON → req.body (ไม่มีบรรทัดนี้ req.body จะว่าง)
+app.use(express.json());
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store'); // ห้าม browser เก็บผลเก่าไว้ใช้ ตัวเลขเงินต้องสดเสมอ
+  next();
+});  // แปลง body JSON → req.body (ไม่มีบรรทัดนี้ req.body จะว่าง)
 
 // 2) routes
 app.get('/health', (req, res) => res.json({ ok: true }));

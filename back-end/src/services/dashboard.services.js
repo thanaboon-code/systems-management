@@ -1,9 +1,11 @@
 // Dashboard = สรุปตัวเลข (อ่านอย่างเดียว ไม่แก้ข้อมูล)
 //
 // ความหมายของยอด
-//   totalAmount  = ยอดที่ต้องเก็บ (รวมตามไซซ์)
-//   marginAmount = ส่วนต่างที่ได้ (หักไว้)
+//   totalAmount  = ยอดที่ต้องเก็บจากโรงงาน (ราคาขาย)
+//   buyTotal     = ยอดซื้อจากบ่อ (ก่อนหักส่วนต่าง)
+//   marginAmount = ส่วนต่างที่หักจากเจ้าของบ่อ
 //   grandTotal   = ยอดจ่ายเจ้าของบ่อ
+//   profit       = กำไร = totalAmount − grandTotal
 import { Prisma } from '@prisma/client';
 import prisma from '../configs/prisma.config.js';
 import { toDate, todayInBangkok, thisMonthInBangkok, monthRange } from '../utils/date.utils.js';
@@ -19,15 +21,17 @@ const zeroIfNull = (value) => new Prisma.Decimal(value ?? 0);
 const avgPrice = (amount, weight) =>
   weight.isZero() ? new Prisma.Decimal(0) : amount.div(weight).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 
-const sumFields = { totalWeight: true, totalAmount: true, marginAmount: true, grandTotal: true };
+const sumFields = { totalWeight: true, totalAmount: true, buyTotal: true, marginAmount: true, grandTotal: true, profit: true };
 
 // แปลงผลรวมของ order → ตัวเลขสรุป
 const toTotals = (agg) => ({
   orderCount: agg._count._all,
   totalWeight: zeroIfNull(agg._sum.totalWeight),
   totalAmount: zeroIfNull(agg._sum.totalAmount),
+  buyTotal: zeroIfNull(agg._sum.buyTotal),
   marginAmount: zeroIfNull(agg._sum.marginAmount),
   grandTotal: zeroIfNull(agg._sum.grandTotal),
+  profit: zeroIfNull(agg._sum.profit),
 });
 
 // ======================================================
@@ -45,7 +49,7 @@ async function summarize(orderWhere) {
       by: ['size'],
       where: { order: where },
       _count: { _all: true },
-      _sum: { weight: true, amount: true },
+      _sum: { weight: true, amount: true, buyAmount: true },
     }),
 
     // สรุปตามปลายทาง
@@ -63,12 +67,15 @@ async function summarize(orderWhere) {
       .map((s) => {
         const weight = zeroIfNull(s._sum.weight);
         const amount = zeroIfNull(s._sum.amount);
+        const buyAmount = zeroIfNull(s._sum.buyAmount);
         return {
           size: s.size,
           orderCount: s._count._all,
           totalWeight: weight,
-          totalAmount: amount,
-          avgPricePerKg: avgPrice(amount, weight),
+          totalAmount: amount,                       // ยอดขาย
+          buyAmount,                                 // ยอดซื้อ
+          avgPricePerKg: avgPrice(amount, weight),   // ราคาขายเฉลี่ย/กก.
+          avgBuyPricePerKg: avgPrice(buyAmount, weight), // ราคาซื้อเฉลี่ย/กก.
         };
       })
       .sort((a, b) => compareSize(a.size, b.size)),

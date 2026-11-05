@@ -1,5 +1,6 @@
 // หน้าสรุปรายเดือน
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link, useSearchParams } from 'react-router'
 import { getMonthlySummary } from '../api/dashboard.js'
 import { formatDate, formatMoney, formatMonth, formatWeight, thisMonthISO } from '../utils/format.js'
@@ -16,6 +17,8 @@ export default function MonthlyPage() {
   const month = searchParams.get('month') ?? thisMonthISO()
   const [result, setResult] = useState({ data: null, error: null })
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getMonthlySummary(month)
@@ -24,7 +27,7 @@ export default function MonthlyPage() {
     return () => {
       ignore = true
     }
-  }, [month])
+  }, [month, refreshKey])
 
   const { data, error } = result
 
@@ -54,9 +57,9 @@ export default function MonthlyPage() {
                       <th className="px-4 py-2">วันที่</th>
                       <th className="px-4 py-2 text-right">order</th>
                       <th className="px-4 py-2 text-right">น้ำหนัก</th>
-                      <th className="px-4 py-2 text-right">ยอดที่ต้องเก็บ</th>
-                      <th className="px-4 py-2 text-right">ส่วนต่าง</th>
+                      <th className="px-4 py-2 text-right">เก็บจากโรงงาน</th>
                       <th className="px-4 py-2 text-right">จ่ายเจ้าของบ่อ</th>
+                      <th className="px-4 py-2 text-right">กำไร</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -70,8 +73,8 @@ export default function MonthlyPage() {
                         <td className="px-4 py-2 text-right">{d.orderCount}</td>
                         <td className="px-4 py-2 text-right">{formatWeight(d.totalWeight)}</td>
                         <td className="px-4 py-2 text-right">{formatMoney(d.totalAmount)}</td>
-                        <td className="px-4 py-2 text-right">{formatMoney(d.marginAmount)}</td>
                         <td className="px-4 py-2 text-right">{formatMoney(d.grandTotal)}</td>
+                        <td className="px-4 py-2 text-right">{formatMoney(d.profit)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -81,8 +84,8 @@ export default function MonthlyPage() {
                       <td className="px-4 py-2 text-right">{data.totals.orderCount}</td>
                       <td className="px-4 py-2 text-right">{formatWeight(data.totals.totalWeight)}</td>
                       <td className="px-4 py-2 text-right">{formatMoney(data.totals.totalAmount)}</td>
-                      <td className="px-4 py-2 text-right">{formatMoney(data.totals.marginAmount)}</td>
                       <td className="px-4 py-2 text-right">{formatMoney(data.totals.grandTotal)}</td>
+                      <td className="px-4 py-2 text-right">{formatMoney(data.totals.profit)}</td>
                     </tr>
                   </tfoot>
                 </table>

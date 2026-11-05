@@ -42,7 +42,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"buyPricePerKg\": \"150\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"buyPricePerKg\": \"115\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
             }
           },
           "event": [
@@ -71,7 +71,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"สมชาย\",\n  \"includeMargin\": true,\n  \"items\": [\n    {\n      \"size\": \"66 - 70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"1000\",\n      \"pricePerKg\": \"160\"\n    },\n    {\n      \"size\": \"100-120\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"300\",\n      \"pricePerKg\": \"110\"\n    },\n    {\n      \"size\": \"กุ้งนิ่ม\",\n      \"weight\": \"50\",\n      \"pricePerKg\": \"60\"\n    }\n  ]\n}"
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"สมชาย\",\n  \"includeMargin\": true,\n  \"items\": [\n    {\n      \"size\": \"66 - 70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"1000\",\n      \"buyPricePerKg\": \"155\",\n      \"pricePerKg\": \"160\"\n    },\n    {\n      \"size\": \"100-120\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"300\",\n      \"buyPricePerKg\": \"105\",\n      \"pricePerKg\": \"110\"\n    },\n    {\n      \"size\": \"กุ้งนิ่ม\",\n      \"weight\": \"50\",\n      \"buyPricePerKg\": \"55\",\n      \"pricePerKg\": \"60\"\n    }\n  ]\n}"
             }
           }
         },
@@ -123,7 +123,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"158\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"buyPricePerKg\": \"153\",\n      \"pricePerKg\": \"158\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"buyPricePerKg\": \"115\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
             }
           }
         }
@@ -196,7 +196,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
+              "raw": "{\n  \"orderDate\": \"2026-10-10\",\n  \"pondName\": \"จรัญ\",\n  \"note\": \"ไม่บวกส่วนต่าง\",\n  \"items\": [\n    {\n      \"size\": \"66-70\",\n      \"destination\": \"โรงงาน ก\",\n      \"weight\": \"5289.59\",\n      \"buyPricePerKg\": \"150\",\n      \"pricePerKg\": \"155\"\n    },\n    {\n      \"size\": \"96-100\",\n      \"destination\": \"กทม.\",\n      \"weight\": \"490.70\",\n      \"buyPricePerKg\": \"115\",\n      \"pricePerKg\": \"120\"\n    }\n  ]\n}"
             }
           }
         },

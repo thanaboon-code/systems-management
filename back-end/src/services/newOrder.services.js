@@ -140,7 +140,8 @@ function buildOrderData(body, current, known) {
   }
 
   let totalWeight = new Prisma.Decimal(0);
-  let totalAmount = new Prisma.Decimal(0);
+  let totalAmount = new Prisma.Decimal(0); // ยอดขาย (เก็บจากโรงงาน)
+  let buyTotal = new Prisma.Decimal(0);    // ยอดซื้อ (ราคาบ่อ)
   const seenSizes = new Set();
 
   const rows = items.map((item, i) => {
@@ -152,14 +153,17 @@ function buildOrderData(body, current, known) {
     seenSizes.add(size);
 
     const weight = toDecimal(item.weight, `${row} น้ำหนัก`, { mustBePositive: true, max: LIMITS.weight });
-    const pricePerKg = toDecimal(item.pricePerKg, `${row} ราคา/กก.`, { max: LIMITS.pricePerKg });
-    const amount = roundBaht(weight.mul(pricePerKg)); // น้ำหนัก × ราคา (ปัดเป็นบาท)
+    const buyPricePerKg = toDecimal(item.buyPricePerKg, `${row} ราคาซื้อ/กก.`, { max: LIMITS.pricePerKg });
+    const pricePerKg = toDecimal(item.pricePerKg, `${row} ราคาขาย/กก.`, { max: LIMITS.pricePerKg });
+    const buyAmount = roundBaht(weight.mul(buyPricePerKg)); // น้ำหนัก × ราคาซื้อ (ปัดเป็นบาท)
+    const amount = roundBaht(weight.mul(pricePerKg));       // น้ำหนัก × ราคาขาย (ปัดเป็นบาท)
 
     totalWeight = totalWeight.add(weight);
     totalAmount = totalAmount.add(amount);
+    buyTotal = buyTotal.add(buyAmount);
 
     const destination = canonical(toText(item.destination, `${row} ปลายทาง`, LIMITS.destination), known.destinations);
-    return { size, destination, weight, pricePerKg, amount };
+    return { size, destination, weight, buyPricePerKg, buyAmount, pricePerKg, amount };
   });
 
   // ส่วนต่าง (หักออกจากยอด): ไม่ส่งมา → ใช้ค่าเดิม (ตอนแก้ไข) หรือค่าเริ่มต้น (ตอนสร้าง)
@@ -173,9 +177,10 @@ function buildOrderData(body, current, known) {
     { max: 100 },
   );
   const marginAmount = includeMargin
-    ? roundBaht(totalAmount.mul(marginRate).div(100)) // ยอดรวม × 1.5% = ส่วนที่หักเป็นของเรา (ปัดเป็นบาท)
+    ? roundBaht(buyTotal.mul(marginRate).div(100)) // ยอดซื้อ × 1.5% = หักจากเจ้าของบ่อ (ปัดเป็นบาท)
     : new Prisma.Decimal(0);                        // ไม่หัก = 0
-  const grandTotal = totalAmount.sub(marginAmount); // ยอดรวม − ส่วนต่าง = ยอดจ่ายเจ้าของบ่อ
+  const grandTotal = buyTotal.sub(marginAmount);    // ยอดซื้อ − ส่วนต่าง = ยอดจ่ายเจ้าของบ่อ
+  const profit = totalAmount.sub(grandTotal);       // ยอดขาย − ยอดจ่ายเจ้าของบ่อ = กำไร
 
   return {
     order: {
@@ -184,10 +189,12 @@ function buildOrderData(body, current, known) {
       note: toText(body.note, 'หมายเหตุ', LIMITS.note),
       totalWeight,
       totalAmount,
+      buyTotal,
       includeMargin,
       marginRate,
       marginAmount,
       grandTotal,
+      profit,
     },
     items: rows,
   };

@@ -1,5 +1,6 @@
 // หน้ารายละเอียด order + 2 ปุ่มติ๊กเงิน + แก้ไข / ยกเลิก / กู้คืน
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link, useParams } from 'react-router'
 import { cancelOrder, getOrder, restoreOrder } from '../api/orders.js'
 import { formatDate, formatDateTime, formatMoney, formatWeight, toDateOnly } from '../utils/format.js'
@@ -15,6 +16,8 @@ export default function OrderDetailPage() {
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getOrder(id)
@@ -23,7 +26,7 @@ export default function OrderDetailPage() {
     return () => {
       ignore = true
     }
-  }, [id])
+  }, [id, refreshKey])
 
   const { order, error } = result
   if (error) return <Alert>{error.message}</Alert>
@@ -98,14 +101,16 @@ export default function OrderDetailPage() {
 
         {/* ---- ตารางไซซ์ ---- */}
         <Card className="overflow-x-auto p-0">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-page text-left text-muted">
               <tr>
                 <th className="px-4 py-2">ไซซ์</th>
                 <th className="px-4 py-2">ส่งไปที่</th>
                 <th className="px-4 py-2 text-right">น้ำหนัก</th>
-                <th className="px-4 py-2 text-right">ราคา/กก.</th>
-                <th className="px-4 py-2 text-right">ยอดเงิน</th>
+                <th className="px-4 py-2 text-right">ราคาซื้อ/กก.</th>
+                <th className="px-4 py-2 text-right">ยอดซื้อ</th>
+                <th className="px-4 py-2 text-right">ราคาขาย/กก.</th>
+                <th className="px-4 py-2 text-right">ยอดขาย</th>
               </tr>
             </thead>
             <tbody>
@@ -114,6 +119,8 @@ export default function OrderDetailPage() {
                   <td className="px-4 py-2 font-medium">{item.size}</td>
                   <td className="px-4 py-2">{item.destination ?? <span className="text-muted">-</span>}</td>
                   <td className="px-4 py-2 text-right">{formatWeight(item.weight)}</td>
+                  <td className="px-4 py-2 text-right">{formatMoney(item.buyPricePerKg)}</td>
+                  <td className="px-4 py-2 text-right">{formatMoney(item.buyAmount)}</td>
                   <td className="px-4 py-2 text-right">{formatMoney(item.pricePerKg)}</td>
                   <td className="px-4 py-2 text-right">{formatMoney(item.amount)}</td>
                 </tr>
@@ -125,13 +132,15 @@ export default function OrderDetailPage() {
         {/* ---- ยอดรวม ---- */}
         <Card className="ml-auto max-w-sm space-y-2">
           <Row label="น้ำหนักรวม" value={formatWeight(order.totalWeight)} />
-          <Row label="ยอดรวมตามไซซ์ (ที่ต้องเก็บ)" value={formatMoney(order.totalAmount)} />
+          <Row label="ยอดขาย (เก็บจากโรงงาน)" value={formatMoney(order.totalAmount)} />
+          <Row label="ยอดซื้อจากบ่อ" value={formatMoney(order.buyTotal)} />
           <Row
-            label={order.includeMargin ? `หักส่วนต่าง ${Number(order.marginRate)}%` : 'ส่วนต่าง (ไม่หัก)'}
+            label={order.includeMargin ? `หักส่วนต่าง ${Number(order.marginRate)}% จากเจ้าของบ่อ` : 'ส่วนต่าง (ไม่หัก)'}
             value={`− ${formatMoney(order.marginAmount)}`}
           />
-          <div className="border-t border-line pt-2">
-            <Row label="ยอดจ่ายเจ้าของบ่อ" value={formatMoney(order.grandTotal)} big />
+          <div className="space-y-2 border-t border-line pt-2">
+            <Row label="ยอดจ่ายเจ้าของบ่อ" value={formatMoney(order.grandTotal)} />
+            <Row label="กำไร" value={formatMoney(order.profit)} big negative={Number(order.profit) < 0} />
           </div>
         </Card>
       </div>
@@ -139,11 +148,11 @@ export default function OrderDetailPage() {
   )
 }
 
-function Row({ label, value, big }) {
+function Row({ label, value, big, negative }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-muted">{label}</span>
-      <span className={big ? 'text-xl font-bold text-primary' : 'font-medium'}>{value}</span>
+      <span className={`${big ? 'text-xl font-bold' : 'font-medium'} ${negative ? 'text-danger' : big ? 'text-primary' : ''}`}>{value}</span>
     </div>
   )
 }

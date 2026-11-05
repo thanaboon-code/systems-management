@@ -69,8 +69,8 @@ Base URL: `http://localhost:3000`
   "includeMargin": false,
   "marginRate": "1.5",
   "items": [
-    { "size": "66-70",  "destination": "โรงงาน ก", "weight": "5289.59", "pricePerKg": "155" },
-    { "size": "96-100", "destination": "กทม.",    "weight": "490.70",  "pricePerKg": "120" }
+    { "size": "66-70",  "destination": "โรงงาน ก", "weight": "5289.59", "buyPricePerKg": "150", "pricePerKg": "155" },
+    { "size": "96-100", "destination": "กทม.",    "weight": "490.70",  "buyPricePerKg": "110", "pricePerKg": "120" }
   ]
 }
 ```
@@ -81,12 +81,13 @@ Base URL: `http://localhost:3000`
 | `pondName` | ✅ | ≤ 100 ตัวอักษร |
 | `note` | | ≤ 191 ตัวอักษร |
 | `includeMargin` | | true / false หักส่วนต่างหรือไม่ (ไม่ส่ง = false) |
-| `marginRate` | | % ส่วนต่าง 0–100 (ไม่ส่ง = 1.5) |
+| `marginRate` | | % ส่วนต่าง 0–100 (ไม่ส่ง = 1.5) · หักจาก**ยอดซื้อ** |
 | `items` | ✅ | 1–50 แถว, ห้ามไซซ์ซ้ำ |
 | `items[].size` | ✅ | ≤ 50 ตัวอักษร (`"66 - 70"` ระบบเก็บเป็น `"66-70"`) |
 | `items[].destination` | | ≤ 100 ตัวอักษร |
 | `items[].weight` | ✅ | > 0, ≤ 1,000,000 |
-| `items[].pricePerKg` | ✅ | ≥ 0, ≤ 100,000 |
+| `items[].buyPricePerKg` | ✅ | ราคา**ซื้อ**จากเจ้าของบ่อ/กก. ≥ 0, ≤ 100,000 |
+| `items[].pricePerKg` | ✅ | ราคา**ขาย** (โรงงานรับซื้อ)/กก. ≥ 0, ≤ 100,000 |
 
 ### แก้ไข
 `PUT /api/new-order/:id` → `Order`
@@ -151,9 +152,13 @@ Front-end จัดกลุ่มปุ่มรับเงินจาก `it
 ```
 | ยอด | ความหมาย |
 |---|---|
-| `totalAmount` | ยอดรวมตามไซซ์ = ยอดที่**เก็บจากผู้รับซื้อ** |
-| `marginAmount` | ส่วนต่างที่**หัก**ไว้เป็นของเรา = totalAmount × marginRate% (ไม่หัก = 0) |
-| `grandTotal` | ยอด**จ่ายเจ้าของบ่อ** = totalAmount − marginAmount |
+| `items[].buyAmount` | น้ำหนัก × ราคาซื้อ (ปัดบาท) |
+| `items[].amount` | น้ำหนัก × ราคาขาย (ปัดบาท) = ยอดเก็บจากปลายทางนั้น |
+| `totalAmount` | รวมยอดขาย = ยอดที่**เก็บจากโรงงาน** |
+| `buyTotal` | รวมยอดซื้อ (ราคาบ่อ ก่อนหักส่วนต่าง) |
+| `marginAmount` | ส่วนต่างที่**หักจากเจ้าของบ่อ** = buyTotal × marginRate% (ไม่หัก = 0) |
+| `grandTotal` | ยอด**จ่ายเจ้าของบ่อ** = buyTotal − marginAmount |
+| `profit` | **กำไร** = totalAmount − grandTotal (ติดลบ = ขาดทุน) |
 
 ---
 
@@ -188,7 +193,9 @@ Front-end จัดกลุ่มปุ่มรับเงินจาก `it
 - `outstanding` = ค้างสะสม **ทุกวัน** (ไม่ขึ้นกับ date)
   - `payToFarmer.amount` = รวม `grandTotal` ที่ยังไม่ได้จ่าย
   - `receive.amount` = รวมยอดไซซ์ที่ยังไม่ได้รับ · `receive.orderCount` = order ที่ยังรับไม่ครบ
-- `day.totalAmount` = ยอดที่ต้องเก็บ · `day.marginAmount` = ส่วนต่างที่ได้ · `day.grandTotal` = ยอดจ่ายเจ้าของบ่อ
+- `day` มี `totalAmount` (เก็บจากโรงงาน), `buyTotal`, `marginAmount`, `grandTotal` (จ่ายเจ้าของบ่อ), `profit` (กำไร) · รายเดือน `totals` / `days[]` ก็เหมือนกัน
+- `sizes[]` มี `avgBuyPricePerKg` (ซื้อเฉลี่ย) และ `avgPricePerKg` (ขายเฉลี่ย)
+- ทุก response ของ `/api` ส่ง `Cache-Control: no-store` (ห้าม browser ใช้ผลเก่า)
 - ไม่นับรายการที่ยกเลิก
 
 ---

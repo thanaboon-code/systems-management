@@ -2,6 +2,7 @@
 // นับ order ที่ยังไม่ได้ติ๊ก "จ่ายเจ้าของบ่อแล้ว" · ยอด = หลังหักส่วนต่าง
 // กด "จ่ายแล้ว" ที่แต่ละ order ได้เลย
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link } from 'react-router'
 import { getPayables } from '../api/dashboard.js'
 import { setPaidToFarmer } from '../api/orders.js'
@@ -16,6 +17,8 @@ export default function PayablesPage() {
   const [busyId, setBusyId] = useState(null)     // order ที่กำลังบันทึก
   const [actionError, setActionError] = useState('')
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getPayables()
@@ -24,7 +27,7 @@ export default function PayablesPage() {
     return () => {
       ignore = true
     }
-  }, [reloadKey])
+  }, [reloadKey, refreshKey])
 
   const { data, error } = result
 

@@ -13,6 +13,7 @@ export async function request(path, { method = 'GET', body } = {}) {
   try {
     res = await fetch(`/api${path}`, {
       method,
+      cache: 'no-store', // ไม่ใช้ผลเก่าที่ browser เก็บไว้ ตัวเลขเงินต้องสดเสมอ
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : undefined,
     });

@@ -1,5 +1,6 @@
 // หน้ารายการรายวัน + 2 ปุ่มติ๊กเงิน + แบ่งหน้า
 import { useEffect, useState } from 'react'
+import useAutoRefresh from '../hooks/useAutoRefresh.js'
 import { Link, useSearchParams } from 'react-router'
 import { getOrders } from '../api/orders.js'
 import { formatMoney, formatWeight, formatDate, todayISO } from '../utils/format.js'
@@ -21,6 +22,8 @@ export default function OrderListPage() {
   const [actionError, setActionError] = useState('')
   const [reloadKey, setReloadKey] = useState(0) // เพิ่มค่า → โหลดรายการใหม่ (เช่น หลังกู้คืน)
 
+  const refreshKey = useAutoRefresh() // โหลดใหม่เมื่อกลับมาที่หน้าจอ + ทุก 30 วินาที
+
   useEffect(() => {
     let ignore = false
     getOrders({ date, page })
@@ -29,7 +32,7 @@ export default function OrderListPage() {
     return () => {
       ignore = true
     }
-  }, [date, page, reloadKey])
+  }, [date, page, reloadKey, refreshKey])
 
   const { data, error } = result
 
@@ -87,8 +90,9 @@ export default function OrderListPage() {
               </div>
               <div className="text-right text-sm">
                 <div>น้ำหนัก {formatWeight(order.totalWeight)}</div>
-                <div>ยอดที่ต้องเก็บ <b>{formatMoney(order.totalAmount)}</b></div>
+                <div>เก็บจากโรงงาน <b>{formatMoney(order.totalAmount)}</b></div>
                 <div>จ่ายเจ้าของบ่อ <b>{formatMoney(order.grandTotal)}</b></div>
+                <div>กำไร <b className={Number(order.profit) < 0 ? 'text-danger' : 'text-primary'}>{formatMoney(order.profit)}</b></div>
               </div>
             </div>
 
